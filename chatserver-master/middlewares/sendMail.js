@@ -1,12 +1,22 @@
 import { createTransport } from "nodemailer";
 
 const sendMail = async (email, subject, otp) => {
+  
+  if (!process.env.Gmail || !process.env.Password) {
+    console.warn("SMTP is not configured. OTP:", otp);
+    return;
+  }
+
   const transport = createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
+    service: "gmail",
+    secure: true,
     auth: {
       user: process.env.Gmail,
       pass: process.env.Password,
+    },
+    tls: {
+      // Some environments (e.g. Render) may require this to connect.
+      rejectUnauthorized: false,
     },
   });
 
