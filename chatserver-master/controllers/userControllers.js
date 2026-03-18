@@ -20,21 +20,15 @@ export const loginUser = async (req, res) => {
       expiresIn: "5m",
     });
 
-    const mailSent = await sendMail(email, "ChatBot", otp);
+    await sendMail(email, "ChatBot", otp);
 
-    const responsePayload = {
+    // Always return the OTP so it can be used for verification (especially in environments
+    // where email delivery is unreliable).
+    res.json({
       message: "Otp send to your mail",
       verifyToken,
-    };
-
-    // In environments where email cannot be delivered (e.g. Render SMTP restrictions),
-    // optionally return the OTP for testing/debugging.
-    if (!mailSent || process.env.SHOW_OTP_IN_RESPONSE === "true") {
-      responsePayload.otp = otp;
-      console.warn("OTP (returned in response due to mail delivery issues):", otp);
-    }
-
-    res.json(responsePayload);
+      otp,
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,
