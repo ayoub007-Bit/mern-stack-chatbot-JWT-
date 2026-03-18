@@ -1,10 +1,10 @@
 import { createTransport } from "nodemailer";
 
 const sendMail = async (email, subject, otp) => {
-  
+  // Return true when email was sent, false otherwise.
   if (!process.env.Gmail || !process.env.Password) {
     console.warn("SMTP is not configured. OTP:", otp);
-    return;
+    return false;
   }
 
   const transport = createTransport({
@@ -74,8 +74,10 @@ const sendMail = async (email, subject, otp) => {
       subject,
       html,
     });
+    return true;
   } catch (error) {
     console.warn("Failed to send OTP email (nodemailer):", error?.message || error);
+    return false;
   }
 };
 
