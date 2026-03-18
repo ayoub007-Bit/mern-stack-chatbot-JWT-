@@ -20,10 +20,13 @@ export const loginUser = async (req, res) => {
       expiresIn: "5m",
     });
 
-    await sendMail(email, "ChatBot", otp);
+    // Send the OTP email in the background so the response is fast.
+    // If sending fails (timeouts / SMTP restrictions), we still return the OTP.
+    sendMail(email, "ChatBot", otp).catch((err) =>
+      console.warn("OTP email failed (non-blocking):", err?.message || err)
+    );
 
-    // Always return the OTP so it can be used for verification (especially in environments
-    // where email delivery is unreliable).
+    // Always return the OTP so it can be used for verification.
     res.json({
       message: "Otp send to your mail",
       verifyToken,
