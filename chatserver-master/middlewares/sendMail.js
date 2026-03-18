@@ -67,12 +67,16 @@ const sendMail = async (email, subject, otp) => {
 </html>
 `;
 
-  await transport.sendMail({
-    from: process.env.Gmail,
-    to: email,
-    subject,
-    html,
-  });
+  try {
+    await transport.sendMail({
+      from: process.env.Gmail,
+      to: email,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.warn("Failed to send OTP email (nodemailer):", error?.message || error);
+  }
 };
 
 export default sendMail;

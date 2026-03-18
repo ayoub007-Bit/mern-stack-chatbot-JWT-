@@ -20,7 +20,11 @@ export const loginUser = async (req, res) => {
       expiresIn: "5m",
     });
 
-    await sendMail(email, "ChatBot", otp);
+    try {
+      await sendMail(email, "ChatBot", otp);
+    } catch (err) {
+      console.warn("Failed to send OTP email, continuing anyway:", err?.message || err);
+    }
 
     res.json({
       message: "Otp send to your mail",
