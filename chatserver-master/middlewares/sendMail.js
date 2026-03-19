@@ -2,38 +2,65 @@ import { createTransport } from "nodemailer";
 
 const sendMail = async (email, subject, otp) => {
   // Return true when email was sent, false otherwise.
-  // Prefer SendGrid in deploy environments because many hosts block Gmail SMTP.
+  // Prefer SendGrid Web API in deploy environments because SMTP ports are often blocked.
   const usingSendGrid = !!process.env.SENDGRID_API_KEY;
 
-  if (!usingSendGrid && (!process.env.Gmail || !process.env.Password)) {
+  if (usingSendGrid) {
+    const sendgridFrom = process.env.SENDGRID_FROM || process.env.Gmail;
+    if (!sendgridFrom) {
+      console.warn("SendGrid is configured but no from address is set.");
+      return false;
+    }
+
+    try {
+      const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          personalizations: [
+            {
+              to: [{ email }],
+              subject,
+            },
+          ],
+          from: { email: sendgridFrom },
+          content: [{ type: "text/html", value: html }],
+        }),
+      });
+
+      if (response.ok) {
+        return true;
+      }
+
+      const text = await response.text();
+      console.warn("SendGrid send failed:", response.status, text);
+      return false;
+    } catch (error) {
+      console.warn("SendGrid send error:", error?.message || error);
+      return false;
+    }
+  }
+
+  if (!process.env.Gmail || !process.env.Password) {
     console.warn("SMTP is not configured. OTP:", otp);
     return false;
   }
 
-  const transportOptions = usingSendGrid
-    ? {
-        host: "smtp.sendgrid.net",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "apikey",
-          pass: process.env.SENDGRID_API_KEY,
-        },
-      }
-    : {
-        service: "gmail",
-        secure: true,
-        auth: {
-          user: process.env.Gmail,
-          pass: process.env.Password,
-        },
-        tls: {
-          // Some environments (e.g. Render) may require this to connect.
-          rejectUnauthorized: false,
-        },
-      };
-
-  const transport = createTransport(transportOptions);
+  const transport = createTransport({
+    service: "gmail",
+    secure: true,
+    auth: {
+      user: process.env.Gmail,
+      pass: process.env.Password,
+    },
+    tls: {
+      // Some environments (e.g. Render) may require this to connect.
+      rejectUnauthorized: false,
+    },
+  });
 
   const html = `<!DOCTYPE html>
 <html lang="en">
