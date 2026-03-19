@@ -2,23 +2,38 @@ import { createTransport } from "nodemailer";
 
 const sendMail = async (email, subject, otp) => {
   // Return true when email was sent, false otherwise.
-  if (!process.env.Gmail || !process.env.Password) {
+  // Prefer SendGrid in deploy environments because many hosts block Gmail SMTP.
+  const usingSendGrid = !!process.env.SENDGRID_API_KEY;
+
+  if (!usingSendGrid && (!process.env.Gmail || !process.env.Password)) {
     console.warn("SMTP is not configured. OTP:", otp);
     return false;
   }
 
-  const transport = createTransport({
-    service: "gmail",
-    secure: true,
-    auth: {
-      user: process.env.Gmail,
-      pass: process.env.Password,
-    },
-    tls: {
-      // Some environments (e.g. Render) may require this to connect.
-      rejectUnauthorized: false,
-    },
-  });
+  const transportOptions = usingSendGrid
+    ? {
+        host: "smtp.sendgrid.net",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "apikey",
+          pass: process.env.SENDGRID_API_KEY,
+        },
+      }
+    : {
+        service: "gmail",
+        secure: true,
+        auth: {
+          user: process.env.Gmail,
+          pass: process.env.Password,
+        },
+        tls: {
+          // Some environments (e.g. Render) may require this to connect.
+          rejectUnauthorized: false,
+        },
+      };
+
+  const transport = createTransport(transportOptions);
 
   const html = `<!DOCTYPE html>
 <html lang="en">
