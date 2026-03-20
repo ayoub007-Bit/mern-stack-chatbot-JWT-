@@ -67,6 +67,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
       </div>
 
+      {/*
       <div className="absolute bottom-0 mb-6 w-full">
         <button
           className="bg-red-600 text-white text-xl px-3 py-2 rounded-md hover:bg-red-700"
@@ -75,6 +76,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           Logout
         </button>
       </div>
+      */}
     </div>
   );
 };

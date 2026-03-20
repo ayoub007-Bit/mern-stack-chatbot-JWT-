@@ -57,8 +57,12 @@ export const ChatProvider = ({ children }) => {
         },
       });
 
-      setChats(data);
-      setSelected(data[0]._id);
+      if (data && data.length === 0) {
+        createChat();
+      } else {
+        setChats(data);
+        setSelected(data[0]._id);
+      }
     } catch (error) {
       console.log(error);
     }
