@@ -1,66 +1,17 @@
-import { createTransport } from "nodemailer";
+import sendgrid from "@sendgrid/mail";
 
 const sendMail = async (email, subject, otp) => {
-  // Return true when email was sent, false otherwise.
-  // Prefer SendGrid Web API in deploy environments because SMTP ports are often blocked.
-  const usingSendGrid = !!process.env.SENDGRID_API_KEY;
+  const from = process.env.SENDGRID_FROM || process.env.Gmail;
 
-  if (usingSendGrid) {
-    const sendgridFrom = process.env.SENDGRID_FROM || process.env.Gmail;
-    if (!sendgridFrom) {
-      console.warn("SendGrid is configured but no from address is set.");
-      return false;
-    }
-
-    try {
-      const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          personalizations: [
-            {
-              to: [{ email }],
-              subject,
-            },
-          ],
-          from: { email: sendgridFrom },
-          content: [{ type: "text/html", value: html }],
-        }),
-      });
-
-      if (response.ok) {
-        return true;
-      }
-
-      const text = await response.text();
-      console.warn("SendGrid send failed:", response.status, text);
-      return false;
-    } catch (error) {
-      console.warn("SendGrid send error:", error?.message || error);
-      return false;
-    }
-  }
-
-  if (!process.env.Gmail || !process.env.Password) {
-    console.warn("SMTP is not configured. OTP:", otp);
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn("SENDGRID_API_KEY is not set, cannot send email.", otp);
     return false;
   }
 
-  const transport = createTransport({
-    service: "gmail",
-    secure: true,
-    auth: {
-      user: process.env.Gmail,
-      pass: process.env.Password,
-    },
-    tls: {
-      // Some environments (e.g. Render) may require this to connect.
-      rejectUnauthorized: false,
-    },
-  });
+  if (!from) {
+    console.warn("SENDGRID_FROM (or Gmail) is not set as a from address.");
+    return false;
+  }
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -102,25 +53,30 @@ const sendMail = async (email, subject, otp) => {
 <body>
     <div class="container">
         <h1>OTP Verification</h1>
-        <p>Hello ${email} your (One-Time Password) for your account verification is.</p>
-        <p class="otp">${otp}</p> 
+        <p>Hello ${email}, your One-Time Password is:</p>
+        <p class="otp">${otp}</p>
     </div>
 </body>
 </html>
 `;
 
+  sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: email,
+    from,
+    subject,
+    html,
+  };
+
   try {
-    await transport.sendMail({
-      from: process.env.Gmail,
-      to: email,
-      subject,
-      html,
-    });
+    await sendgrid.send(msg);
     return true;
   } catch (error) {
-    console.warn("Failed to send OTP email (nodemailer):", error?.message || error);
+    console.warn("SendGrid send failed:", error?.response?.body || error?.message || error);
     return false;
   }
 };
 
 export default sendMail;
+       
