@@ -54,6 +54,7 @@ export const UserProvider = ({ children }) => {
 
   async function fetchUser() {
     try {
+      /*
       const { data } = await axios.get(`${server}/api/user/me`, {
         headers: {
           token: localStorage.getItem("token"),
@@ -62,6 +63,9 @@ export const UserProvider = ({ children }) => {
 
       setIsAuth(true);
       setUser(data);
+      */
+      setIsAuth(true);
+      setUser({ _id: "64f1b2c3d4e5f6a7b8c9d0e1", email: "guest@example.com", name: "Guest" });
       setLoading(false);
     } catch (error) {
       console.log(error);

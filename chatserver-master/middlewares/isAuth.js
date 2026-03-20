@@ -3,6 +3,7 @@ import { User } from "../models/User.js";
 
 export const isAuth = async (req, res, next) => {
   try {
+    /*
     const token = req.headers.token;
 
     if (!token)
@@ -13,6 +14,9 @@ export const isAuth = async (req, res, next) => {
     const decode = jwt.verify(token, process.env.Jwt_sec);
 
     req.user = await User.findById(decode._id);
+    */
+
+    req.user = { _id: "64f1b2c3d4e5f6a7b8c9d0e1" };
 
     next();
   } catch (error) {
