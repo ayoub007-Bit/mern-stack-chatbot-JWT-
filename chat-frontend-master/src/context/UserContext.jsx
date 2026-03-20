@@ -3,6 +3,10 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { server } from "../main";
 
+if (!localStorage.getItem("token") || localStorage.getItem("token").length !== 24) {
+  localStorage.setItem("token", [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''));
+}
+
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
@@ -66,10 +70,6 @@ export const UserProvider = ({ children }) => {
       */
       
       let guestToken = localStorage.getItem("token");
-      if (!guestToken || guestToken.length !== 24) {
-        guestToken = [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-        localStorage.setItem("token", guestToken);
-      }
 
       setIsAuth(true);
       setUser({ _id: guestToken, email: `guest_${guestToken}@example.com`, name: "Guest" });
