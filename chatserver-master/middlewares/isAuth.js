@@ -17,6 +17,7 @@ export const isAuth = async (req, res, next) => {
     */
 
     const token = req.headers.token;
+    console.log("Token received from frontend:", token, "length:", token ? token.length : 0);
     req.user = { _id: token && token.length === 24 ? token : "64f1b2c3d4e5f6a7b8c9d0e1" };
 
     next();
