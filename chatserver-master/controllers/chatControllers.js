@@ -69,7 +69,7 @@ export const addConversation = async (req, res) => {
               role: "user",
               parts: [
                 {
-                  text: question,
+                  text: question + "\n\n(Please keep your response very short and concise.)",
                 },
               ],
             },
@@ -91,17 +91,18 @@ export const addConversation = async (req, res) => {
       data?.candidates?.[0]?.content?.parts?.[0]?.text ??
       "(No answer returned from Gemini)";
 
-    const conversation = await Conversation.create({
-      chat: chat._id,
-      question,
-      answer,
-    });
-
-    const updatedChat = await Chat.findByIdAndUpdate(
-      req.params.id,
-      { latestMessage: question },
-      { new: true }
-    );
+    const [conversation, updatedChat] = await Promise.all([
+      Conversation.create({
+        chat: chat._id,
+        question,
+        answer,
+      }),
+      Chat.findByIdAndUpdate(
+        req.params.id,
+        { latestMessage: question },
+        { new: true }
+      )
+    ]);
 
     res.json({
       conversation,

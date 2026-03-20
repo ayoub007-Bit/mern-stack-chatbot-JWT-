@@ -64,8 +64,15 @@ export const UserProvider = ({ children }) => {
       setIsAuth(true);
       setUser(data);
       */
+      
+      let guestToken = localStorage.getItem("token");
+      if (!guestToken || guestToken.length !== 24) {
+        guestToken = [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        localStorage.setItem("token", guestToken);
+      }
+
       setIsAuth(true);
-      setUser({ _id: "64f1b2c3d4e5f6a7b8c9d0e1", email: "guest@example.com", name: "Guest" });
+      setUser({ _id: guestToken, email: `guest_${guestToken}@example.com`, name: "Guest" });
       setLoading(false);
     } catch (error) {
       console.log(error);
