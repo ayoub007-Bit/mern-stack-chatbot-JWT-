@@ -48,7 +48,7 @@ export const addConversation = async (req, res) => {
       });
 
     const geminiKey = process.env.GEMINI_API_KEY;
-    const model ="gemini-2.5-flash-lite";
+    const model = "gemini-3.1-flash-lite";
 
     if (!geminiKey)
       return res.status(500).json({
